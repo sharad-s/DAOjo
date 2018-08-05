@@ -1,5 +1,8 @@
 const DAOToken = artifacts.require("DAOToken");
 const Crowdsale = artifacts.require("Crowdsale");
+const NFTokenMetadataEnumerableMock = artifacts.require(
+  "NFTokenMetadataEnumerableMock"
+);
 
 contract("Crowdsale", ([owner, issuer, buyer]) => {
   let daoToken, _crowdsale;
@@ -52,6 +55,30 @@ contract("Crowdsale", ([owner, issuer, buyer]) => {
       // Rate is set to 1000 so assert that buyer gets 1000 Tokens (1000 * 1E18 deceimals)
       assert.equal(buyerBalance, 1000 * 1000000000000000000, "After buy");
       // assert.equal(buyerICOtoken.valueOf(), 50, "After buy");
+    });
+  });
+});
+
+contract("NFTTokenMetaDataEnumerableMock", ([owner, houseOwner1]) => {
+  let testvar;
+
+  beforeEach(async () => {
+    _houseNFT = await NFTokenMetadataEnumerableMock.new(
+      "HOUSE TOKEN!!! :)",
+      "HOUSE"
+    );
+  });
+
+  context("NFT Registry", async () => {
+    it(`Should have a total of 0 tokens when created`, async () => {
+      const tokens = await _houseNFT.getAllTokens();
+      assert.lengthOf(tokens, 0, "array is empty");
+    });
+
+    it(`Should mint a new NFT`, async () => {
+      const new_house_NFT = await _houseNFT.mint(houseOwner1, 1, "URI");
+      const tokens = await _houseNFT.getAllTokens();
+      assert.lengthOf(tokens, 1, "array does not have 1");
     });
   });
 });

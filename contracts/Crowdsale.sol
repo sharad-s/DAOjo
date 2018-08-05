@@ -199,3 +199,9 @@ contract Crowdsale {
     wallet.transfer(msg.value);
   }
 }
+
+
+contract SPV is Crowdsale {
+  string public SPV_NAME;
+
+}
