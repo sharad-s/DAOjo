@@ -3,7 +3,7 @@ pragma solidity ^0.4.23;
 import "./tokens/NFTokenMetadata.sol";
 import "./tokens/NFTokenEnumerable.sol";
 
-contract NFTokenMetadataEnumerableMock is NFTokenEnumerable, NFTokenMetadata {
+contract HouseNFTRegistry is NFTokenEnumerable, NFTokenMetadata {
 
   constructor(
     string _name,

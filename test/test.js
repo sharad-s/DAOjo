@@ -1,8 +1,7 @@
 const DAOToken = artifacts.require("DAOToken");
 const Crowdsale = artifacts.require("Crowdsale");
-const NFTokenMetadataEnumerableMock = artifacts.require(
-  "NFTokenMetadataEnumerableMock"
-);
+const HouseNFTRegistry = artifacts.require("HouseNFTRegistry");
+const SPVHoldingCrowdsale = artifacts.require("SPVHoldingContract");
 
 contract("Crowdsale", ([owner, issuer, buyer]) => {
   let daoToken, _crowdsale;
@@ -10,7 +9,7 @@ contract("Crowdsale", ([owner, issuer, buyer]) => {
 
   beforeEach(async () => {
     _daoToken = await DAOToken.new(owner, TOTAL_TOKEN_SUPPLY);
-    _crowdsale = await Crowdsale.new(1000, issuer, _daoToken.address);
+    _crowdsale = await Crowdsale.new(1, issuer, _daoToken.address);
 
     // Transfer DAO tokens to crowdsale
     await _daoToken.transfer(_crowdsale.address, TOTAL_TOKEN_SUPPLY, {
@@ -53,32 +52,81 @@ contract("Crowdsale", ([owner, issuer, buyer]) => {
       console.log("Buyer Balance: ", buyerBalance.toNumber());
 
       // Rate is set to 1000 so assert that buyer gets 1000 Tokens (1000 * 1E18 deceimals)
-      assert.equal(buyerBalance, 1000 * 1000000000000000000, "After buy");
+      assert.equal(buyerBalance, 1 * 1000000000000000000, "After buy");
       // assert.equal(buyerICOtoken.valueOf(), 50, "After buy");
     });
   });
 });
 
-contract("NFTTokenMetaDataEnumerableMock", ([owner, houseOwner1]) => {
-  let testvar;
+contract(
+  "NFTTokenMetaDataEnumerableMock",
+  ([deployer, houseOwner, spv, buyer1, buyer2, buyer3]) => {
+    const TOTAL_TOKEN_SUPPLY = 3000; //100k tokens * 1E18 wei
 
-  beforeEach(async () => {
-    _houseNFT = await NFTokenMetadataEnumerableMock.new(
-      "HOUSE TOKEN!!! :)",
-      "HOUSE"
-    );
-  });
+    beforeEach(async () => {
+      // Initiate SPV DAO Ownership Token (Crowdsale)
+      _daoToken = await DAOToken.new(deployer, TOTAL_TOKEN_SUPPLY);
 
-  context("NFT Registry", async () => {
-    it(`Should have a total of 0 tokens when created`, async () => {
-      const tokens = await _houseNFT.getAllTokens();
-      assert.lengthOf(tokens, 0, "array is empty");
+      // Initiate SPV Holding Contract / Crowdsale
+      _spvHoldingCrowdsale = await SPVHoldingCrowdsale.new(
+        1,
+        houseOwner,
+        _daoToken.address
+      );
+
+      // Transfer DAO ownerhip tokens equally to DAO members
+      await _daoToken.transfer(buyer1, TOTAL_TOKEN_SUPPLY / 3, {
+        from: deployer
+      });
+      // Transfer DAO ownerhip tokens equally to DAO members
+      await _daoToken.transfer(buyer2, TOTAL_TOKEN_SUPPLY / 3, {
+        from: deployer
+      });
+      // Transfer DAO ownerhip tokens equally to DAO members
+      await _daoToken.transfer(buyer3, TOTAL_TOKEN_SUPPLY / 3, {
+        from: deployer
+      });
+
+      // Create NFT Registry of House NFTs
+      _HouseNFTRegistry = await HouseNFTRegistry.new("HOUSE TOKEN", "HOUSE");
     });
 
-    it(`Should mint a new NFT`, async () => {
-      const new_house_NFT = await _houseNFT.mint(houseOwner1, 1, "URI");
-      const tokens = await _houseNFT.getAllTokens();
-      assert.lengthOf(tokens, 1, "array does not have 1");
+    context("NFT Registry", async () => {
+      it(`Should have a total of 0 tokens when created`, async () => {
+        const tokens = await _HouseNFTRegistry.getAllTokens();
+        assert.lengthOf(tokens, 0, "array is empty");
+      });
+
+      it(`Should approve and transfer token to SPV contract`, async () => {
+        // mint 1 house
+        const house_1 = await _HouseNFTRegistry.mint(houseOwner, 1, "URI");
+        const approval = await _HouseNFTRegistry.approve(
+          _spvHoldingCrowdsale.address,
+          1,
+          {
+            from: houseOwner
+          }
+        );
+        const nft_approval = await _HouseNFTRegistry.getApproved(1);
+
+        console.log("NFT APPROVED FOR: ", nft_approval);
+        console.log("HOUSE OWNER: ", houseOwner);
+        console.log("SPV: ", _spvHoldingCrowdsale.address);
+
+        // Query Buyer balance
+        const tokenBalance = await _daoToken.balanceOf(buyer1);
+        console.log("DAO TOKEN BALANCE OF BUYER 1: ", tokenBalance);
+
+        const transferFrom = await _HouseNFTRegistry.transferFrom(
+          houseOwner,
+          _spvHoldingCrowdsale.address,
+          1,
+          { from: _spvHoldingCrowdsale.address, to: _HouseNFTRegistry.address }
+        );
+
+        // const nft_owner = _HouseNFTRegistry.ownerOf(1);
+        // assert.equal(nft_owner, _spvHoldingCrowdsale.address, "NOT EQUAL");
+      });
     });
-  });
-});
+  }
+);
