@@ -1,0 +1,28 @@
+{
+  "name": "daojo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "@0xcert/ethereum-erc721": "^1.10.0",
+    "openzeppelin-solidity": "^1.11.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sharad-s/DAOjo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sharad-s/DAOjo/issues"
+  },
+  "homepage": "https://github.com/sharad-s/DAOjo#readme"
+}
