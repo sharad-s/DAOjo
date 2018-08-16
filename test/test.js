@@ -121,11 +121,11 @@ contract(
           houseOwner,
           _spvHoldingCrowdsale.address,
           1,
-          { from: _spvHoldingCrowdsale.address, to: _HouseNFTRegistry.address }
+          { from: houseOwner }
         );
 
-        // const nft_owner = _HouseNFTRegistry.ownerOf(1);
-        // assert.equal(nft_owner, _spvHoldingCrowdsale.address, "NOT EQUAL");
+        const nft_owner = await _HouseNFTRegistry.ownerOf(1);
+        assert.equal(nft_owner, _spvHoldingCrowdsale.address, "NOT EQUAL");
       });
     });
   }
